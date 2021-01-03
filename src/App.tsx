@@ -18,7 +18,7 @@ const initial = Array.from({ length: 10 }, (v, k) => k).map((k) => {
 
 const ListItemDisplay: React.FC<{ listItem: ListItem }> = ({ listItem }) => {
   return (
-    <div className="ListItemDisplay" id={listItem.id}>
+    <div className="ListItemDisplay bg-purple-200" id={listItem.id}>
       <span>{listItem.display}</span>
     </div>
   );
