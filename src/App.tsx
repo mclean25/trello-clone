@@ -1,5 +1,10 @@
 import React, { useState } from "react";
-import { DragDropContext, DropResult } from "react-beautiful-dnd";
+import {
+  DragDropContext,
+  Draggable,
+  Droppable,
+  DropResult,
+} from "react-beautiful-dnd";
 import "./App.css";
 
 interface ListItem {
@@ -16,17 +21,31 @@ const initial = Array.from({ length: 10 }, (v, k) => k).map((k) => {
   return custom;
 });
 
-const ListItemDisplay: React.FC<{ listItem: ListItem }> = ({ listItem }) => {
+const ListItemDisplay: React.FC<{ listItem: ListItem; index: number }> = ({
+  listItem,
+  index,
+}) => {
   return (
-    <div className="ListItemDisplay bg-purple-200" id={listItem.id}>
-      <span>{listItem.display}</span>
-    </div>
+    <Draggable draggableId={listItem.id} index={index}>
+      {(provided) => (
+        <div
+          className="ListItemDisplay bg-purple-200"
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          {...provided.dragHandleProps}
+        >
+          <span>{listItem.display}</span>
+        </div>
+      )}
+    </Draggable>
   );
 };
 
 const List: React.FC<{ list: ListItem[] }> = ({ list }) => {
   const listItems = list.map((listItem: ListItem, index: number) => {
-    return <ListItemDisplay listItem={listItem} key={listItem.id} />;
+    return (
+      <ListItemDisplay listItem={listItem} index={index} key={listItem.id} />
+    );
   });
   return <div>{listItems}</div>;
 };
@@ -61,9 +80,14 @@ const App: React.FC = () => {
   return (
     <div className="App">
       <DragDropContext onDragEnd={onDragEnd}>
-        <div>
-          <List list={initial} />
-        </div>
+        <Droppable droppableId="list">
+          {(provided) => (
+            <div ref={provided.innerRef} {...provided.droppableProps}>
+              <List list={initial} />
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
       </DragDropContext>
     </div>
   );
