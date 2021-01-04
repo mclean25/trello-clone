@@ -1,3 +1,4 @@
+import { list } from "postcss";
 import React, { useState } from "react";
 import {
   DragDropContext,
@@ -41,7 +42,7 @@ const ListItemDisplay: React.FC<{ listItem: ListItem; index: number }> = ({
   );
 };
 
-const List: React.FC<{ list: ListItem[] }> = ({ list }) => {
+const ListItemsDisplay: React.FC<{ list: ListItem[] }> = ({ list }) => {
   const listItems = list.map((listItem: ListItem, index: number) => {
     return (
       <ListItemDisplay listItem={listItem} index={index} key={listItem.id} />
@@ -56,6 +57,22 @@ const reorder = (list: ListItem[], startIndex: number, endIndex: number) => {
   result.splice(endIndex, 0, removed);
 
   return result;
+};
+
+const DroppableList: React.FC<{ listId: string; items: ListItem[] }> = ({
+  listId,
+  items,
+}) => {
+  return (
+    <Droppable droppableId={listId}>
+      {(provided) => (
+        <div ref={provided.innerRef} {...provided.droppableProps}>
+          <ListItemsDisplay list={items} />
+          {provided.placeholder}
+        </div>
+      )}
+    </Droppable>
+  );
 };
 
 const App: React.FC = () => {
@@ -78,18 +95,13 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="App">
-      <DragDropContext onDragEnd={onDragEnd}>
-        <Droppable droppableId="list">
-          {(provided) => (
-            <div ref={provided.innerRef} {...provided.droppableProps}>
-              <List list={initial} />
-              {provided.placeholder}
-            </div>
-          )}
-        </Droppable>
-      </DragDropContext>
-    </div>
+    <body>
+      <div className="App">
+        <DragDropContext onDragEnd={onDragEnd}>
+          <DroppableList listId="1" items={state.list}></DroppableList>
+        </DragDropContext>
+      </div>
+    </body>
   );
 };
 
