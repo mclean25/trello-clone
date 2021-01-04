@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import {
   DragDropContext,
   Draggable,
+  DraggableLocation,
   Droppable,
   DropResult,
 } from "react-beautiful-dnd";
@@ -59,6 +60,24 @@ const reorder = (list: ListItem[], startIndex: number, endIndex: number) => {
   return result;
 };
 
+const move = (
+  source: ListItem[],
+  destination: ListItem[],
+  droppableSource: DraggableLocation,
+  droppableDestination: DraggableLocation
+): Record<string, ListItem[]> => {
+  const sourceClone = Array.from(source);
+  const destClone = Array.from(destination);
+  const [removed] = sourceClone.splice(droppableSource.index, 1);
+
+  destClone.splice(droppableDestination.index, 0, removed);
+
+  return {
+    [droppableSource.droppableId]: sourceClone,
+    [droppableDestination.droppableId]: destClone,
+  };
+};
+
 const DroppableList: React.FC<{ listId: string; items: ListItem[] }> = ({
   listId,
   items,
@@ -66,7 +85,11 @@ const DroppableList: React.FC<{ listId: string; items: ListItem[] }> = ({
   return (
     <Droppable droppableId={listId}>
       {(provided) => (
-        <div ref={provided.innerRef} {...provided.droppableProps}>
+        <div
+          className="bg-green-500 pr-2"
+          ref={provided.innerRef}
+          {...provided.droppableProps}
+        >
           <ListItemsDisplay list={items} />
           {provided.placeholder}
         </div>
@@ -76,21 +99,31 @@ const DroppableList: React.FC<{ listId: string; items: ListItem[] }> = ({
 };
 
 const App: React.FC = () => {
-  const [state, setState] = useState({ list: initial });
-
+  const [state, setState] = useState<Record<string, ListItem[]>>({
+    list1: initial,
+    list2: [],
+  });
   const onDragEnd = (result: DropResult) => {
-    if (!result.destination) {
+    const { source, destination } = result;
+    if (!destination) {
       return;
-    } else if (result.destination.index === result.source.index) {
-      return;
+    }
+    if (source.droppableId === destination.droppableId) {
+      const reorderResult = reorder(
+        state[source.droppableId],
+        source.index,
+        destination.index
+      );
+      setState({ [source.droppableId]: reorderResult, ...state });
     } else {
-      setState({
-        list: reorder(
-          state.list,
-          result.source.index,
-          result.destination.index
-        ),
-      });
+      setState(
+        move(
+          state[source.droppableId],
+          state[destination.droppableId],
+          source,
+          destination
+        )
+      );
     }
   };
 
@@ -98,7 +131,8 @@ const App: React.FC = () => {
     <body>
       <div className="App">
         <DragDropContext onDragEnd={onDragEnd}>
-          <DroppableList listId="1" items={state.list}></DroppableList>
+          <DroppableList listId="1" items={state.list1}></DroppableList>
+          <DroppableList listId="2" items={state.list2}></DroppableList>
         </DragDropContext>
       </div>
     </body>
